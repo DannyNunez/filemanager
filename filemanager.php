@@ -18,10 +18,10 @@
 $time = microtime(true);
 // page build functions
 function _layout_header_($script = null){
-	$pagelayout = '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Fast File manager</title><script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script><script>'.$script.'</script><link href="'.$_SERVER["PHP_SELF"].'?r=style" rel="stylesheet"></head>';
+	$pagelayout = '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Fast File manager</title><script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script><link href="http://google-code-prettify.googlecode.com/svn/trunk/src/prettify.css" type="text/css" rel="stylesheet" /><script src="http://google-code-prettify.googlecode.com/svn/trunk/src/prettify.js"></script><script>'.$script.'</script><link href="'.$_SERVER["PHP_SELF"].'?r=style" rel="stylesheet"></head>';
 	return $pagelayout;
 }
-function _layout_body_($dir = null,$nav = null,$content,$right_buttons = null,$notice = null,$error = null){
+function _layout_body_($content,$dir = null,$nav = null,$right_buttons = null,$notice = null,$error = null){
 	if(isset($notice)){
 		$extra = '<div class="notice">'.$notice.'</div>';
 	}
@@ -37,19 +37,24 @@ function _layout_footer_($time){
 }
 
 // create the action buttons
-function _buttons_($file){
-
+function _buttons_($file = null){
+if($file != null){
 $buttons = '<button name="actions" value="save">Save File</button>';
 $buttons .='<button id="rename">Rename File</button>';
 $buttons .='<button id="createf">Create File</button>';
 $buttons .='<button id="created">Create DIR</button>';
 $buttons .='<button name="actions" value="delete">Delete</button>';
+}
 return $buttons;
 }
 
 // build the nav function
 function _nav_($dir){
 $nav = '<ul>';
+
+if(!is_dir($dir)){
+$dir = end(explode('=',$_SERVER[HTTP_REFERER]));
+}
 if ($handle = opendir($dir)) {
     while (false !== ($entry[] = readdir($handle)));
 	sort($entry);
@@ -252,7 +257,7 @@ $filecontent = file_get_contents($file);
 	if(in_array($filetype, $images)){
 	$filecontent = $filestats.'<div id="code_box"><div id="numbers"></div><img id="fimage" src="'.$_SERVER["PHP_SELF"].'?r=image&image='.$file.'&type='.$filetype.'"/></div>';
 	}else{
-	$filecontent = $filestats.'<div id="code_box"><div id="numbers"></div><textarea name="content" id="codes">'.htmlentities($filecontent).'</textarea></div>';
+	$filecontent = $filestats.'<div id="code_box"><div id="numbers"></div><textarea class="prettyprint linenums" name="content" id="codes">'.htmlentities($filecontent).'</textarea></div>';
 	}
 	return $filecontent;
 }
@@ -264,7 +269,11 @@ function _dir_($dir){
 		$files = glob($dir . "/*");
 		//print each file name
 		foreach($files as $file){
+			if(is_dir($file)){
 			$dircontent .= '<a href="'.$_SERVER["PHP_SELF"].'?dir='.$file.'">'.end(explode('/',$file)).'</a>';
+			}else{
+			$dircontent .= '<a href="'.$_SERVER["PHP_SELF"].'?dir='.$dir.'&file='.$file.'">'.end(explode('/',$file)).'</a>';
+			}
 		}
 		$dircontent .= '</div>';
 	}
@@ -295,6 +304,6 @@ $notice = null;
 }
 //display page
 echo _layout_header_($script);
-echo _layout_body_($dir,$nav,$content,$right_buttons,$notice,$error);
+echo _layout_body_($content,$dir,$nav,$right_buttons,$notice,$error);
 echo _layout_footer_($time);
 ?>
